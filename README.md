@@ -1,231 +1,171 @@
 # AcxiomCRM
 
-**AcxiomCRM** is an enterprise-grade, role-based Customer Relationship Management (CRM) web application built using **ASP.NET Core 8.0 MVC**, **Entity Framework Core with SQLite**, **ASP.NET Core Identity**, **Bootstrap 5**, and **Chart.js**.
+AcxiomCRM is a role-based CRM for managing customers, qualifying leads, tracking sales opportunities, and coordinating follow-ups. It combines a Razor web interface, a scoped REST API, and audit records for sales and account administration.
 
-The application covers the full customer-sales lifecycle from lead generation, qualification, and lead conversion, to opportunity pipeline tracking, customer management, follow-up touchpoint scheduling, multi-type activity logging, system audit trails, and multi-tier reporting with fine-grained server-enforced role-based authorization.
+**Live demo:** [AcxiomCRM on Render](https://acxiomcrm-65sa.onrender.com) · [Sign in](https://acxiomcrm-65sa.onrender.com/Account/Login)
 
----
+The hosted demo uses synthetic data and requires a hosted account for protected screens. Follow the local setup below to reproduce all three roles. The Render Free service can take time to wake up, and its local SQLite data can reset after a restart or redeploy.
 
-## 1. System Requirements & Windows Setup
+## Features
 
-### Prerequisites
-- **Operating System**: Windows 10/11 or Windows Server (also compatible with Linux / macOS via cross-platform .NET 8).
-- **Runtime & SDK**: [.NET 8.0 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) (Version `8.0.428` or newer).
-- **Database**: SQLite (embedded, zero-configuration local file `AcxiomCRM.db`).
-- **Web Browser**: Modern Chromium-based browser (Chrome, Edge) or Firefox.
+| Module | Workflow | Search and filters |
+| --- | --- | --- |
+| Customers | Create, view, edit, and deactivate customers. Customer codes and normalized email and phone values are unique. | Name, email, phone, company, status |
+| Leads | Capture, assign, qualify, and convert a lead into a customer, with an optional opportunity. | Name, company, status, assigned user |
+| Opportunities | Create, edit, and deactivate deals. Track pipeline stages, weighted forecasts, and Won/Lost outcomes. | Opportunity name, customer, stage, status |
+| Follow-ups | Schedule, reschedule, complete, and cancel follow-ups. Review pending and overdue work. | Date, status, assignee, related customer or lead |
+| Activities | Record calls, meetings, emails, and tasks against CRM records. | Activity type, date, status, assigned user |
+| Administration | Manage users, roles, account status, password resets, lockouts, and audit events. | User and role filters, plus audit filters for action, module, user, and date |
 
-### PowerShell Setup
-Ensure `dotnet` is available in your PowerShell session:
+## Local setup
+
+Install the **.NET 8 SDK**. SQLite is embedded, so setup requires no separate database service. Run the following in PowerShell.
+
 ```powershell
-# Verify .NET 8 installation
+git clone https://github.com/Anav-000/AcxiomCRM.git
+Set-Location AcxiomCRM
 dotnet --version
-# Expected output: 8.0.xxx
-```
-
-If `dotnet` is installed in your local AppData directory:
-```powershell
-$env:PATH = "$env:LOCALAPPDATA\Microsoft\dotnet;$env:PATH"
-```
-
----
-
-## 2. Quick Start & Run Commands
-
-### 1. Restore & Build (Release Configuration)
-```powershell
 dotnet restore
 dotnet build -c Release
+$env:ASPNETCORE_ENVIRONMENT = "Development"
+dotnet run -c Release --no-build --no-launch-profile --urls "http://localhost:5234"
 ```
 
-### 2. Database Migrations & Initial Setup
-Migrations apply automatically on startup via `context.Database.MigrateAsync()`. Alternatively, you can apply them manually:
+Open [http://localhost:5234](http://localhost:5234). Startup applies EF Core migrations, creates `AcxiomCRM.db` when needed, and seeds the Identity roles. Development also seeds the demo users. If PowerShell cannot find the SDK installed under Local AppData, run `$env:PATH = "$env:LOCALAPPDATA\Microsoft\dotnet;$env:PATH"`.
+
+To manually apply migrations, run `dotnet tool restore` followed by `dotnet ef database update`.
+
+### Demo accounts
+
+Set the password variables **before first launch against a fresh database** to choose your own local demo credentials. Each password needs at least eight characters and must include uppercase and lowercase letters, a digit, and a symbol.
+
+| Role | Default seed email | Password override |
+| --- | --- | --- |
+| Admin | `admin@acxiomcrm.local` | `ADMIN_PASSWORD` |
+| Manager | `manager@acxiomcrm.local` | `MANAGER_PASSWORD` |
+| Sales Executive in the Manager's team | `sales@acxiomcrm.local` | `SALES_PASSWORD` |
+| Sales Executive outside that team | `sales2@acxiomcrm.local` | `SALES2_PASSWORD` |
+
+The corresponding email overrides are `ADMIN_EMAIL`, `MANAGER_EMAIL`, `SALES_EMAIL`, and `SALES2_EMAIL`. These variables provision new seed accounts. An existing account retains its password until an Admin resets it.
+
+## Access control and audit
+
+| Role | Record scope | Administration |
+| --- | --- | --- |
+| Admin | Organization-wide CRM, Dashboard, and reports | Users, role assignments, lockouts, password resets, and full system audit |
+| Manager | Own work and direct reports' CRM records, pipeline, and reports | Team-scoped audit report at `/Reports/Audit` |
+| SalesExecutive | Assigned CRM records, Dashboard, and permitted reports | Account self-service |
+
+Public registration assigns `SalesExecutive`. ASP.NET Core Identity handles cookie authentication, password hashing, and account lockout after five failed attempts for 15 minutes. The server applies role and record-level access checks to MVC requests and protected API routes. Razor forms use anti-forgery protection and unobtrusive validation. EF Core handles database queries and parameterization.
+
+Audit entries capture the actor, action, entity, record ID, before/after values where applicable, timestamp, and IP address when available. Events include login, failed login, lockout, logout, record creation, updates, deactivation, conversion, role changes, and password reset actions.
+
+## Dashboard and reports
+
+The Dashboard shows total customers, total and open leads, total and open opportunities, won and lost opportunities, total open pipeline value, and pending follow-ups. The KPIs and charts use data within the signed-in user's scope.
+
+- **Date filters** cover all time, today, this week, this month, and a custom range.
+- **Lead status chart** covers New, Contacted, Qualified, Lost, and Converted.
+- **Pipeline chart** covers Qualification, Proposal, Negotiation, Won, and Lost.
+- **Monthly Sales chart** shows won revenue over six months, grouped by expected close date.
+
+The [Reports controller](Controllers/ReportsController.cs) exposes eight reports.
+
+| Report | Route | Data shown |
+| --- | --- | --- |
+| Customers | `/Reports/Customers` | Customer status, owner, and creation date |
+| Leads | `/Reports/Leads` | Source, status, owner, and conversion |
+| Follow-ups | `/Reports/FollowUps` | Scheduled activity, status, owner, and overdue work |
+| Opportunities | `/Reports/Opportunities` | Stage, amount, probability, and expected close date |
+| Pipeline | `/Reports/Pipeline` | Stage and owner totals, including weighted pipeline |
+| Sales and conversion | `/Reports/SalesConversion` | Lead conversion and opportunity outcomes |
+| User activity | `/Reports/UserActivity` | Activity counts by user |
+| Audit | `/Reports/Audit` | Organization-wide for Admin and team-scoped for Manager |
+
+## Business validation
+
+- **Customers** require a name, a valid email, and a 10-digit phone number. The database enforces email and phone uniqueness independently after normalization.
+- **Leads** require a name, valid contact information, a positive expected value, and a configured status. New leads start at **New**. A qualified lead can be converted through the conversion workflow, which saves the linked records and audit entries together.
+- **Opportunities** require a positive amount, probability between 0 and 100 inclusive, and a close date on or after today while open. Stage determines the Open, Won, or Lost outcome. **Weighted value = Amount × Probability / 100.**
+- **Follow-ups** reject past dates on creation or when scheduled as Planned. Completing overdue work preserves the originally scheduled date.
+
+The UI validates required fields, format, length, and ranges. The server also validates direct requests, including business rules and ownership of linked records.
+
+## Architecture and database
+
+**Stack** · ASP.NET Core 8 MVC and Razor, ASP.NET Core Identity, EF Core, SQLite, Bootstrap 5, jQuery unobtrusive validation, Chart.js, and Docker.
+
+| Location | Responsibility |
+| --- | --- |
+| [Controllers](Controllers/) and [API controllers](Controllers/Api/) | MVC routes and REST endpoints |
+| [Services](Services/) | Scoped access, audit events, and verification runners |
+| [Models](Models/), [ViewModels](ViewModels/), and [DTOs](DTOs/) | Persistence entities, forms and views, and API contracts |
+| [Data](Data/) and [Migrations](Migrations/) | EF Core context, Identity setup, seed data, and schema history |
+| [Views](Views/) and [wwwroot](wwwroot/) | Razor UI, validation scripts, and static assets |
+
+| Entity | Primary key | Assignment fields |
+| --- | --- | --- |
+| Customer | `CustomerId` | `CustomerCode`, `CustomerName`, `Email`, `Phone`, `CompanyName`, `Address`, `City`, `State`, `Status`, `CreatedDate`, `CreatedBy` |
+| Lead | `LeadId` | `LeadCode`, `LeadName`, `Email`, `Phone`, `CompanyName`, `Source`, `Status`, `ExpectedValue`, `CreatedDate`, `AssignedTo` |
+| Opportunity | `OpportunityId` | `OpportunityName`, `CustomerId`, `LeadId`, `Amount`, `Stage`, `Probability`, `ExpectedCloseDate`, `Status`, `CreatedDate`, `AssignedTo` |
+| FollowUp | `FollowUpId` | `CustomerId`, `LeadId`, `FollowUpDate`, `FollowUpType`, `Remarks`, `Status`, `AssignedTo` |
+| Activity | `ActivityId` | `ActivityType`, `Subject`, `Description`, `ActivityDate`, `CustomerId`, `LeadId`, `AssignedTo`, `Status` |
+| AuditLog | `AuditLogId` | `UserId`, `Action`, `EntityName`, `RecordId`, `OldValue`, `NewValue`, `CreatedDate`, `IpAddress` |
+
+Opportunities belong to customers and may retain a source lead. Follow-ups and activities can reference a customer, lead, or opportunity. The migrations `InitialCreate`, `AddPhase2Schema`, and `AddPhase3Schema` capture schema evolution, including ownership, customer uniqueness, relationships, and soft deletion. Identity maintains its own users and roles tables.
+
+## REST API
+
+Use the Identity session cookie for protected resources. Sign in with `POST /api/auth/login` and a JSON body containing `email` and `password`. Keep the returned cookies. After signing in, call `GET /api/auth/csrf` and send its token as `X-XSRF-TOKEN` on CRM mutations. Payload contracts are defined in [DTOs/ApiDtos.cs](DTOs/ApiDtos.cs).
+
+| Endpoint | Methods | Operation |
+| --- | --- | --- |
+| `/api/auth/login` | POST | Create an authenticated session |
+| `/api/auth/logout` | POST | End the authenticated session |
+| `/api/auth/csrf` | GET | Get an anti-forgery request token |
+| `/api/customers` | GET, POST | Search scoped customers or create a customer |
+| `/api/customers/{id}` | GET, PUT, DELETE | Read, update, or deactivate a customer |
+| `/api/leads` | GET, POST | List or create leads |
+| `/api/opportunities` | GET, POST | List or create opportunities |
+| `/api/followups` | GET, POST | List or schedule follow-ups |
+| `/api/reports/pipeline` | GET | Get open pipeline totals by stage and owner |
+
+Typical responses include `200 OK`, `201 Created`, `400 Bad Request`, `401 Unauthorized`, `403 Forbidden`, and `404 Not Found`. Duplicate customer email or phone returns `409 Conflict`. A locked account can return `423 Locked` at API sign-in.
+
+## Verification
+
+Run the four CLI verifiers with a disposable SQLite database because they create and update test records.
+
 ```powershell
-dotnet ef database update
+$env:ConnectionStrings__DefaultConnection = "Data Source=AcxiomCRM-verification.db"
+1..4 | ForEach-Object {
+    dotnet run -c Release --no-build --no-launch-profile -- "--verify-phase$_"
+    if ($LASTEXITCODE -ne 0) { throw "Verification phase $_ failed" }
+}
+Remove-Item Env:\ConnectionStrings__DefaultConnection
 ```
 
-### 3. Launch the Application
-Run the app locally on port `5234`:
-```powershell
-$env:ASPNETCORE_URLS = "http://localhost:5234"
-dotnet run -c Release --no-build
-```
-Navigate to: **[http://localhost:5234](http://localhost:5234)**
+### Final acceptance scenario · assignment section 17.19
 
-### 4. Automated Verification Suites
-The application includes self-verifying CLI test runners:
-```powershell
-# Phase 1 Verification (Identity, Password Policy, Lockout, Dashboard Shell)
-dotnet run -c Release --no-build -- --verify-phase1
+| Step | Check | Expected behavior |
+| --- | --- | --- |
+| 1 | Open a protected page signed out | Redirect to sign-in |
+| 2 | Register or sign in with a valid user | Dashboard opens |
+| 3 | Enter an invalid customer email and phone | Inline errors block submission |
+| 4 | Submit invalid customer data directly | Server rejects the request |
+| 5 | Enter an opportunity amount of zero or less | Server rejects the amount |
+| 6 | Enter probability greater than 100 | Server rejects the probability |
+| 7 | Give an open opportunity a past close date | Server rejects the date |
+| 8 | Create a follow-up dated before today | Server rejects the date |
+| 9 | Sign in as SalesExecutive | Access is limited to assigned records |
+| 10 | Sign in as Manager | Team pipeline and reports are available |
+| 11 | Sign in as Admin | User, role, and audit administration are available |
+| 12 | Create, update, and deactivate a CRM record | Audit captures the operations |
+| 13 | Call `/api/customers` while authenticated | API returns scoped JSON |
+| 14 | Open the Dashboard | KPI cards and Chart.js charts display authorized data |
 
-# Phase 2 Verification (Customer/Lead Uniqueness, Ownership Scoping, Lead Conversion)
-dotnet run -c Release --no-build -- --verify-phase2
+The local implementation report recorded passing checks for all 14 steps. Hosted verification is tracked separately. The public sign-in page responds, and authenticated use on Render requires the generated or configured hosted credentials.
 
-# Phase 3 Verification (Opportunity Business Rules, Follow-Ups, Activities, Lead Protection)
-dotnet run -c Release --no-build -- --verify-phase3
+## Deployment
 
-# Phase 4 Verification (Dashboard Analytics, REST API 409 Checks, Admin Tools, 8 Reports)
-dotnet run -c Release --no-build -- --verify-phase4
-```
-
----
-
-## 3. Local Demo Accounts & Configuration
-
-Demo accounts are automatically seeded in **Development** mode or when explicit environment variables are provided. In accordance with production security standards, hardcoded passwords have been removed from `appsettings.json`.
-
-### Default Development Credentials
-| Role | Email | Password | Assigned Scope |
-|---|---|---|---|
-| **Admin** | `admin@acxiomcrm.local` | `Admin@Password123!` | Global administration, users, roles, audit logs, all records |
-| **Manager** | `manager@acxiomcrm.local` | `Manager@Password123!` | Team CRM records, sales pipeline, management reports |
-| **Sales Executive 1** | `sales@acxiomcrm.local` | `Sales@Password123!` | Assigned customers, leads, opportunities, follow-ups |
-| **Sales Executive 2** | `sales2@acxiomcrm.local` | `Sales2@Password123!` | Isolated account for cross-account boundary verification |
-
-### Customizing Credentials via Environment Variables
-Set these variables in your environment before launch:
-```powershell
-$env:ADMIN_EMAIL = "admin@yourdomain.com"
-$env:ADMIN_PASSWORD = "YourSecurePassword123!"
-$env:MANAGER_EMAIL = "manager@yourdomain.com"
-$env:MANAGER_PASSWORD = "YourSecurePassword123!"
-$env:SALES_EMAIL = "sales@yourdomain.com"
-$env:SALES_PASSWORD = "YourSecurePassword123!"
-```
-
----
-
-## 4. Role-Based Access Control (RBAC) Matrix
-
-| Module | Admin | Manager | Sales Executive |
-|---|---|---|---|
-| **Dashboard** | Full system metrics | Team metrics & pipeline | Assigned records only |
-| **Customers** | All records | Team & unassigned records | Assigned records only |
-| **Leads** | All records | Team leads | Assigned leads only |
-| **Opportunities** | All records | Team opportunities | Assigned deals only |
-| **Follow-Ups** | All records | Team follow-ups | Assigned follow-ups only |
-| **Activities** | All records | Team activities | Assigned activities only |
-| **User Administration** | Full control (reset/unlock/roles) | No access (403) | No access (403) |
-| **Role Management** | Full view | No access (403) | No access (403) |
-| **Audit Logs** | Complete ledger | Scoped team audit events | No access (403) |
-| **Reports (8 Types)** | Full organization data | Team data & metrics | Scoped assigned data |
-| **REST APIs** | Authorized endpoints | Authorized endpoints | Authorized endpoints |
-
----
-
-## 5. Database Architecture & Design
-
-The database schema utilizes additive EF Core migrations targeting SQLite (`AcxiomCRM.db`):
-- `20261127083000_InitialCreate`: Identity tables + Customer, Lead, Opportunity, FollowUp, Activity, AuditLog
-- `20261127114321_AddPhase2Schema`: Customer and Lead unique normalized indexes and assignment columns
-- `20261127140739_AddPhase3Schema`: Soft deletion (`IsDeleted`) and Foreign Keys across entities
-
-### Key Entities
-```
- Customer (1) <────── (N) Opportunity (1) <────── (N) FollowUp
-    │                          │
-    │ (1)                      │ (1)
-    ▼ (N)                      ▼ (N)
- Activity                   Activity
-    ▲                          ▲
-    │ (N)                      │ (N)
-  Lead (1) ────────────────────┘
-```
-
-- **Customer**: `CustomerId`, `CustomerCode` (Unique), `CustomerName`, `Email`, `NormalizedEmail` (Unique Index), `Phone`, `NormalizedPhone` (Unique Index), `CompanyName`, `Address`, `City`, `State`, `Status`, `AssignedTo`, `CreatedBy`, `CreatedDate`, `IsDeleted`.
-- **Lead**: `LeadId`, `LeadCode` (Unique), `LeadName`, `Email`, `Phone`, `CompanyName`, `Source`, `Status` (New, Contacted, Qualified, Unqualified, Converted, Lost), `ExpectedValue`, `AssignedTo`, `CreatedDate`, `ConvertedCustomerId`, `IsDeleted`.
-- **Opportunity**: `OpportunityId`, `OpportunityName`, `CustomerId`, `LeadId`, `Amount`, `Stage` (Qualification, Proposal, Negotiation, Won, Lost), `Probability` (0–100), `WeightedValue` (Calculated), `ExpectedCloseDate`, `Status` (Open, Won, Lost), `AssignedTo`, `CreatedDate`, `IsDeleted`.
-- **FollowUp**: `FollowUpId`, `CustomerId`, `LeadId`, `OpportunityId`, `FollowUpDate`, `FollowUpType` (Call, Meeting, Email, Task), `Remarks`, `Status` (Planned, Completed, Cancelled), `AssignedTo`, `IsDeleted`.
-- **Activity**: `ActivityId`, `ActivityType` (Call, Meeting, Email, Task), `Subject`, `Description`, `ActivityDate`, `CustomerId`, `LeadId`, `OpportunityId`, `AssignedTo`, `Status` (Completed, Pending, InProgress, Cancelled), `IsDeleted`.
-- **AuditLog**: `AuditLogId`, `UserId`, `Action`, `EntityName`, `RecordId`, `OldValue`, `NewValue`, `CreatedDate`, `IpAddress`.
-
----
-
-## 6. REST API Reference
-
-All protected endpoints enforce role-based scoped access. State-changing requests (`POST`, `PUT`, `DELETE`) with cookie authentication validate anti-forgery tokens.
-
-### Authentication Endpoints
-- `POST /api/auth/login`: Authenticates user credentials.
-  - Request: `{ "email": "admin@acxiomcrm.local", "password": "Admin@Password123!" }`
-  - Response: `200 OK` with `{ "email": "...", "name": "...", "role": "..." }`, sets session and `XSRF-TOKEN` cookie.
-- `POST /api/auth/logout`: Clears session cookie (`200 OK`).
-- `GET /api/auth/csrf`: Returns `{ "token": "...", "headerName": "X-XSRF-TOKEN" }`.
-
-### Customers API (`/api/customers`)
-- `GET /api/customers`: Scoped list of active customers; supports `?search=...`.
-- `GET /api/customers/{id}`: Customer details; returns `404 Not Found` or `403 Forbidden` if outside scope.
-- `POST /api/customers`: Creates a customer.
-  - Enforces independent email and 10-digit phone uniqueness. Returns **`409 Conflict`** if either email or phone is already registered.
-  - Returns `201 Created` with created `CustomerDto` and `Location` header.
-- `PUT /api/customers/{id}`: Updates customer details; returns `409 Conflict` on duplicate collisions; returns `200 OK`.
-- `DELETE /api/customers/{id}`: Soft deletes customer (`IsDeleted = true`); returns `200 OK`.
-
-### Leads API (`/api/leads`)
-- `GET /api/leads`: Scoped list of leads.
-- `POST /api/leads`: Creates a new lead (status `New`, `ExpectedValue > 0`); returns `201 Created`.
-
-### Opportunities API (`/api/opportunities`)
-- `GET /api/opportunities`: Scoped list of opportunities.
-- `POST /api/opportunities`: Creates an opportunity (`Amount > 0`, `Probability 0–100`, future expected close date for open deals); returns `201 Created`.
-
-### Follow-Ups API (`/api/followups`)
-- `GET /api/followups`: Scoped list of follow-ups.
-- `POST /api/followups`: Creates a follow-up. New follow-ups with dates earlier than today are rejected with `400 Bad Request` regardless of status. Returns `201 Created`.
-
-### Reports API (`/api/reports`)
-- `GET /api/reports/pipeline`: Returns JSON metrics for stage-wise, owner-wise, and weighted open pipeline amounts.
-
----
-
-## 7. Main Application Demo URLs
-
-| Page / Feature | URL Path | Access Level |
-|---|---|---|
-| **Dashboard** | `/Dashboard` | Authenticated (Role-scoped KPIs & Chart.js) |
-| **Customers** | `/Customers` | Authenticated (List, Create, Edit, Details, Delete) |
-| **Leads** | `/Leads` | Authenticated (List, Create, Edit, Convert, Delete) |
-| **Opportunities** | `/Opportunities` | Authenticated (Pipeline list, Create, Edit, Outcomes) |
-| **Follow-Ups** | `/FollowUps` | Authenticated (Schedule, Overdue, Complete) |
-| **Activities** | `/Activities` | Authenticated (Log Call, Meeting, Email, Task) |
-| **Reports Hub** | `/Reports` | Authenticated (Directory of all 8 reports) |
-| **1. Customer Report** | `/Reports/Customers` | Role-scoped |
-| **2. Lead Report** | `/Reports/Leads` | Role-scoped |
-| **3. Follow-Up Report** | `/Reports/FollowUps` | Role-scoped |
-| **4. Opportunity Report** | `/Reports/Opportunities` | Role-scoped |
-| **5. Pipeline Report** | `/Reports/Pipeline` | Role-scoped |
-| **6. Conversion Report** | `/Reports/SalesConversion` | Role-scoped |
-| **7. User Activity Report** | `/Reports/UserActivity` | Role-scoped |
-| **8. Audit Report** | `/Reports/Audit` | Admin & Manager only |
-| **User Management** | `/Admin/Users` | Administrator only |
-| **Role & Permission Matrix**| `/Admin/Roles` | Administrator only |
-| **System Audit Logs** | `/Admin/AuditLogs` | Administrator only |
-
----
-
-## 8. Final 14-Step Acceptance Scenario Results (Section 17.19)
-
-| Step | Acceptance Scenario Check | Verification Result | Status |
-|---|---|---|:---:|
-| **1** | Open without authentication $\rightarrow$ protected pages blocked | Anonymous requests redirect to `/Account/Login` | **PASSED** |
-| **2** | Register/login with valid user $\rightarrow$ user reaches Dashboard | Authenticated redirect lands on `/Dashboard` | **PASSED** |
-| **3** | Create Customer with invalid email/phone $\rightarrow$ client validation blocks save | Client-side unobtrusive validation blocks submit | **PASSED** |
-| **4** | Bypass browser validation with crafted request $\rightarrow$ server rejects invalid data | Direct HTTP POST rejected by server model validation | **PASSED** |
-| **5** | Create Opportunity with Amount $\le 0 \rightarrow$ rejected | Amount $0$ and $-1$ rejected on client and server | **PASSED** |
-| **6** | Create Opportunity with Probability $> 100 \rightarrow$ rejected | Probability $101$ rejected on client and server | **PASSED** |
-| **7** | Set Expected Close Date in the past $\rightarrow$ rejected for active opportunity | Past close date rejected with clear error message | **PASSED** |
-| **8** | Create Follow-Up dated before today $\rightarrow$ rejected for new follow-up | Past date rejected through MVC and API for any status | **PASSED** |
-| **9** | Login as SalesExecutive $\rightarrow$ only assigned sales scope accessible | Strict record isolation between Sales 1 and Sales 2 | **PASSED** |
-| **10** | Login as Manager $\rightarrow$ team pipeline/report access available | Manager accesses team reports; Admin pages return 403 | **PASSED** |
-| **11** | Login as Admin $\rightarrow$ user/role/audit administration available | Full user edit, lockout unlock, password reset, and logs | **PASSED** |
-| **12** | Create/update/delete a CRM record $\rightarrow$ audit entry generated | Captured with UserId, Action, RecordId, Old/NewValue | **PASSED** |
-| **13** | Call `/api/customers` $\rightarrow$ authorized JSON response returned | Returns scoped JSON; duplicate returns `409 Conflict` | **PASSED** |
-| **14** | Open Dashboard $\rightarrow$ KPI cards and Chart.js charts display authorized data | 9 KPI cards & 3 Chart.js charts render authorized data | **PASSED** |
-
----
-
-## 9. Packaging & Submission Verification
-
-- Project archive: `AcxiomCRM_Submission.zip`
-- Includes complete source code, project file, EF Core migrations, Razor views, CSS/JS static assets, and documentation.
-- Excludes `bin/`, `obj/`, `.git/`, local `.db` files, task logs, and environment secrets.
-- Verified clean extraction and standalone execution against a fresh SQLite database.
+[Dockerfile](Dockerfile) builds and publishes the app with .NET 8. [render.yaml](render.yaml) configures a Docker web service on Render with synthetic demo data and generated bootstrap passwords. Set custom bootstrap secrets in the service environment and share evaluator access privately. Use distinct hosted passwords for all seed roles and synthetic data on the public demo. The application listens on port 8080 inside the container.
