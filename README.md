@@ -49,9 +49,13 @@ $env:ASPNETCORE_ENVIRONMENT = "Development"
 dotnet run -c Release --no-build --no-launch-profile --urls "http://localhost:5234"
 ```
 
-Open [http://localhost:5234](http://localhost:5234). Startup applies EF Core migrations, creates `AcxiomCRM.db` when needed, and seeds the Identity roles. Development also seeds the demo users. If PowerShell cannot find the SDK installed under Local AppData, run `$env:PATH = "$env:LOCALAPPDATA\Microsoft\dotnet;$env:PATH"`.
+For a local installation, open the address shown in the terminal after the app starts. On startup, AcxiomCRM applies EF Core migrations, creates `AcxiomCRM.db` if needed, and seeds the Identity roles. In Development mode, it also creates demo users.
 
-To manually apply migrations, run `dotnet tool restore` followed by `dotnet ef database update`.
+If PowerShell cannot find the .NET SDK installed under Local AppData, run:
+
+\`\`\`powershell
+$env:PATH = "$env:LOCALAPPDATA\Microsoft\dotnet;$env:PATH"
+\`\`\`
 
 ### Demo accounts
 
