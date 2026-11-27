@@ -1,0 +1,132 @@
+@model AcxiomCRM.ViewModels.AdminUserListViewModel
+@{
+    ViewData["Title"] = "User Management";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h2 class="h3 mb-0">User & Role Management</h2>
+        <span class="text-muted">Manage system users, assign roles, and administer account states</span>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<!-- Filters -->
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <form method="get" asp-action="Users" class="row g-3">
+            <div class="col-md-6">
+                <input type="text" name="search" value="@Model.SearchTerm" class="form-control" placeholder="Search by name, email, or username..." />
+            </div>
+            <div class="col-md-4">
+                <select name="role" class="form-select">
+                    <option value="">All Roles</option>
+                    <option value="Admin" selected="@(Model.RoleFilter == "Admin")">Admin</option>
+                    <option value="Manager" selected="@(Model.RoleFilter == "Manager")">Manager</option>
+                    <option value="SalesExecutive" selected="@(Model.RoleFilter == "SalesExecutive")">SalesExecutive</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-primary w-100">Filter</button>
+                <a asp-action="Users" class="btn btn-outline-secondary">Reset</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Users Table -->
+<div class="card shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>User</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Manager</th>
+                    <th>Status</th>
+                    <th>Lockout</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var u in Model.Users)
+                {
+                    <tr>
+                        <td>
+                            <a asp-action="UserDetails" asp-route-id="@u.Id" class="fw-bold text-decoration-none">
+                                @u.Name
+                            </a>
+                        </td>
+                        <td>@u.Email</td>
+                        <td>
+                            @switch (u.Role)
+                            {
+                                case "Admin":
+                                    <span class="badge bg-danger">Admin</span>
+                                    break;
+                                case "Manager":
+                                    <span class="badge bg-warning text-dark">Manager</span>
+                                    break;
+                                default:
+                                    <span class="badge bg-primary">SalesExecutive</span>
+                                    break;
+                            }
+                        </td>
+                        <td>@(u.ManagerName ?? "—")</td>
+                        <td>
+                            @if (u.IsActive)
+                            {
+                                <span class="badge bg-success">Active</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger">Inactive</span>
+                            }
+                        </td>
+                        <td>
+                            @if (u.IsLockedOut)
+                            {
+                                <span class="badge bg-danger"><i class="bi bi-lock-fill me-1"></i>LOCKED</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-light text-muted border">Normal</span>
+                            }
+                        </td>
+                        <td class="text-end">
+                            <div class="btn-group btn-group-sm">
+                                <a asp-action="UserDetails" asp-route-id="@u.Id" class="btn btn-outline-info" title="Details">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a asp-action="UserEdit" asp-route-id="@u.Id" class="btn btn-outline-primary" title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <form asp-action="ToggleActive" asp-route-id="@u.Id" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn @(u.IsActive ? "btn-outline-warning" : "btn-outline-success")" title="@(u.IsActive ? "Deactivate" : "Activate")">
+                                        <i class="bi @(u.IsActive ? "bi-person-dash" : "bi-person-check")"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

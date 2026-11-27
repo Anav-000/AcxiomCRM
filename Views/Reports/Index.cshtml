@@ -1,0 +1,134 @@
+@model AcxiomCRM.ViewModels.ReportsIndexViewModel
+@{
+    ViewData["Title"] = "CRM Reports";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="h3 mb-0">CRM Reports & Analytics</h2>
+        <span class="text-muted">Role-authorized reports across all business modules (Section 4.11 & 11)</span>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- 1. Customer Report -->
+    <div class="col-md-6 col-lg-3">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-body p-4 d-flex flex-column">
+                <div class="p-3 bg-primary-subtle text-primary rounded-circle align-self-start mb-3">
+                    <i class="bi bi-people-fill fs-3"></i>
+                </div>
+                <h5 class="fw-bold">1. Customer Report</h5>
+                <p class="text-muted small flex-grow-1">Customer master records, active/inactive statuses, account owners, and creation dates.</p>
+                <a asp-action="Customers" class="btn btn-outline-primary w-100">Open Report &rarr;</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Lead Report -->
+    <div class="col-md-6 col-lg-3">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-body p-4 d-flex flex-column">
+                <div class="p-3 bg-info-subtle text-info rounded-circle align-self-start mb-3">
+                    <i class="bi bi-funnel-fill fs-3"></i>
+                </div>
+                <h5 class="fw-bold">2. Lead Report</h5>
+                <p class="text-muted small flex-grow-1">Lead acquisition sources, qualification stages, expected values, and conversion information.</p>
+                <a asp-action="Leads" class="btn btn-outline-info w-100">Open Report &rarr;</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. Follow-Up Report -->
+    <div class="col-md-6 col-lg-3">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-body p-4 d-flex flex-column">
+                <div class="p-3 bg-secondary-subtle text-secondary rounded-circle align-self-start mb-3">
+                    <i class="bi bi-calendar-check fs-3"></i>
+                </div>
+                <h5 class="fw-bold">3. Follow-Up Report</h5>
+                <p class="text-muted small flex-grow-1">Planned, completed, rescheduled, missed, and overdue customer touchpoints.</p>
+                <a asp-action="FollowUps" class="btn btn-outline-secondary w-100">Open Report &rarr;</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. Opportunity Report -->
+    <div class="col-md-6 col-lg-3">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-body p-4 d-flex flex-column">
+                <div class="p-3 bg-warning-subtle text-warning rounded-circle align-self-start mb-3">
+                    <i class="bi bi-briefcase-fill fs-3"></i>
+                </div>
+                <h5 class="fw-bold">4. Opportunity Report</h5>
+                <p class="text-muted small flex-grow-1">Deal stages, deal amounts, win probability percentages, and close dates.</p>
+                <a asp-action="Opportunities" class="btn btn-outline-warning w-100">Open Report &rarr;</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. Pipeline Report -->
+    <div class="col-md-6 col-lg-3">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-body p-4 d-flex flex-column">
+                <div class="p-3 bg-success-subtle text-success rounded-circle align-self-start mb-3">
+                    <i class="bi bi-graph-up fs-3"></i>
+                </div>
+                <h5 class="fw-bold">5. Pipeline Report</h5>
+                <p class="text-muted small flex-grow-1">Stage-wise and owner-wise pipeline distributions, forecast weighting, and totals.</p>
+                <a asp-action="Pipeline" class="btn btn-outline-success w-100">Open Report &rarr;</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 6. Sales / Conversion Report -->
+    <div class="col-md-6 col-lg-3">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-body p-4 d-flex flex-column">
+                <div class="p-3 bg-primary-subtle text-primary rounded-circle align-self-start mb-3">
+                    <i class="bi bi-trophy-fill fs-3"></i>
+                </div>
+                <h5 class="fw-bold">6. Conversion Report</h5>
+                <p class="text-muted small flex-grow-1">Lead conversion percentages, Won vs Lost outcomes, and close velocity.</p>
+                <a asp-action="SalesConversion" class="btn btn-outline-primary w-100">Open Report &rarr;</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 7. User Activity Report -->
+    <div class="col-md-6 col-lg-3">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-body p-4 d-flex flex-column">
+                <div class="p-3 bg-info-subtle text-info rounded-circle align-self-start mb-3">
+                    <i class="bi bi-activity fs-3"></i>
+                </div>
+                <h5 class="fw-bold">7. User Activity</h5>
+                <p class="text-muted small flex-grow-1">Calls, meetings, emails, tasks completed, and audit interactions by user.</p>
+                <a asp-action="UserActivity" class="btn btn-outline-info w-100">Open Report &rarr;</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 8. Audit Report -->
+    <div class="col-md-6 col-lg-3">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-body p-4 d-flex flex-column">
+                <div class="p-3 bg-danger-subtle text-danger rounded-circle align-self-start mb-3">
+                    <i class="bi bi-journal-text fs-3"></i>
+                </div>
+                <h5 class="fw-bold">8. Audit Report</h5>
+                <p class="text-muted small flex-grow-1">Security and business audit events with user, timestamp, before/after values.</p>
+                @if (Model.UserRole == "SalesExecutive")
+                {
+                    <button class="btn btn-outline-secondary w-100" disabled title="Restricted to Admin and Manager roles">
+                        <i class="bi bi-lock-fill me-1"></i>Restricted
+                    </button>
+                }
+                else
+                {
+                    <a asp-action="Audit" class="btn btn-outline-danger w-100">Open Report &rarr;</a>
+                }
+            </div>
+        </div>
+    </div>
+</div>

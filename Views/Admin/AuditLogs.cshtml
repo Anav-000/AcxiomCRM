@@ -1,0 +1,129 @@
+@model AcxiomCRM.ViewModels.AdminAuditLogsViewModel
+@{
+    ViewData["Title"] = "System Audit Logs";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h2 class="h3 mb-0">System Audit Logs</h2>
+        <span class="text-muted">Track security and business activity events with user, timestamp, and record changes</span>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <form method="get" asp-action="AuditLogs" class="row g-3">
+            <div class="col-md-2">
+                <label class="form-label small fw-semibold">Action</label>
+                <select name="actionFilter" asp-items="Model.AvailableActions" class="form-select">
+                    <option value="">All Actions</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-semibold">Module / Entity</label>
+                <select name="moduleFilter" asp-items="Model.AvailableModules" class="form-select">
+                    <option value="">All Modules</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small fw-semibold">User ID / Email</label>
+                <input type="text" name="userFilter" value="@Model.UserFilter" class="form-control" placeholder="Search user..." />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-semibold">From Date</label>
+                <input type="date" name="fromDate" value="@(Model.FromDate?.ToString("yyyy-MM-dd"))" class="form-control" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-semibold">To Date</label>
+                <input type="date" name="toDate" value="@(Model.ToDate?.ToString("yyyy-MM-dd"))" class="form-control" />
+            </div>
+            <div class="col-md-1 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">Filter</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Audit Log Table -->
+<div class="card shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 small">
+            <thead class="table-light">
+                <tr>
+                    <th>Timestamp (UTC)</th>
+                    <th>User ID</th>
+                    <th>Action</th>
+                    <th>Entity</th>
+                    <th>Record ID</th>
+                    <th>Changes / Details</th>
+                    <th>IP Address</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Logs.Count == 0)
+                {
+                    <tr>
+                        <td colspan="7" class="text-center py-4 text-muted">No audit events match the selected criteria.</td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var a in Model.Logs)
+                    {
+                        <tr>
+                            <td class="text-nowrap fw-bold">@a.CreatedDate.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                            <td><small class="text-muted">@(a.UserId ?? "System")</small></td>
+                            <td>
+                                @switch (a.Action)
+                                {
+                                    case "Login":
+                                        <span class="badge bg-success">Login</span>
+                                        break;
+                                    case "Logout":
+                                        <span class="badge bg-secondary">Logout</span>
+                                        break;
+                                    case "FailedLogin":
+                                        <span class="badge bg-danger">FailedLogin</span>
+                                        break;
+                                    case "Lockout":
+                                        <span class="badge bg-dark">Lockout</span>
+                                        break;
+                                    case "Create":
+                                        <span class="badge bg-primary">Create</span>
+                                        break;
+                                    case "Update":
+                                        <span class="badge bg-info text-dark">Update</span>
+                                        break;
+                                    case "Delete":
+                                        <span class="badge bg-danger">Delete</span>
+                                        break;
+                                    default:
+                                        <span class="badge bg-secondary">@a.Action</span>
+                                        break;
+                                }
+                            </td>
+                            <td><span class="badge bg-light text-dark border">@a.EntityName</span></td>
+                            <td>@a.RecordId</td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(a.OldValue))
+                                {
+                                    <div><small class="text-muted">Before:</small> <code>@a.OldValue</code></div>
+                                }
+                                @if (!string.IsNullOrEmpty(a.NewValue))
+                                {
+                                    <div><small class="text-muted">After:</small> <span>@a.NewValue</span></div>
+                                }
+                                @if (string.IsNullOrEmpty(a.OldValue) && string.IsNullOrEmpty(a.NewValue))
+                                {
+                                    <span class="text-muted">—</span>
+                                }
+                            </td>
+                            <td><code>@(a.IpAddress ?? "127.0.0.1")</code></td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

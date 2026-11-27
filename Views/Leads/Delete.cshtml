@@ -1,0 +1,34 @@
+@model AcxiomCRM.Models.Lead
+@{
+    ViewData["Title"] = "Delete Lead";
+}
+
+<div class="row justify-content-center mt-4">
+    <div class="col-md-6">
+        <div class="card shadow-sm border-0 border-danger border-top border-4">
+            <div class="card-body p-4 text-center">
+                <div class="display-4 text-danger mb-3">
+                    <i class="bi bi-trash-fill"></i>
+                </div>
+                <h4 class="fw-bold">Confirm Delete / Mark as Lost</h4>
+                <p class="text-muted">
+                    Are you sure you want to deactivate lead <strong>@Model.LeadName</strong> (<code>@Model.LeadCode</code>)?
+                </p>
+                <div class="alert alert-light text-start small border my-3">
+                    <div><strong>Company:</strong> @(Model.CompanyName ?? "-")</div>
+                    <div><strong>Email:</strong> @Model.Email</div>
+                    <div><strong>Phone:</strong> @Model.Phone</div>
+                    <div><strong>Expected Value:</strong> @Model.ExpectedValue.ToString("C")</div>
+                    <div><strong>Assigned To:</strong> @(Model.AssignedTo ?? "None")</div>
+                </div>
+
+                <form asp-action="Delete" asp-route-id="@Model.LeadId" method="post" class="d-flex gap-2 justify-content-center">
+                    <a asp-action="Index" class="btn btn-outline-secondary px-4">Cancel</a>
+                    <button type="submit" class="btn btn-danger px-4">
+                        <i class="bi bi-trash me-1"></i> Confirm Delete
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

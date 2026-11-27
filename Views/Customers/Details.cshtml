@@ -1,0 +1,126 @@
+@model AcxiomCRM.ViewModels.CustomerDetailsViewModel
+@{
+    ViewData["Title"] = "Customer Details";
+    var c = Model.Customer;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-1">
+            <i class="bi bi-person-vcard text-primary me-2"></i>@c.CustomerName
+        </h2>
+        <div class="d-flex gap-2 align-items-center">
+            <span class="badge bg-secondary">@c.CustomerCode</span>
+            <span class="badge @(c.Status == "Active" ? "bg-success" : "bg-danger")">@c.Status</span>
+            <span class="text-muted small">&bull; Created @c.CreatedDate.ToString("yyyy-MM-dd")</span>
+        </div>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="Edit" asp-route-id="@c.CustomerId" class="btn btn-primary">
+            <i class="bi bi-pencil me-1"></i>Edit Customer
+        </a>
+        <a asp-action="Delete" asp-route-id="@c.CustomerId" class="btn btn-outline-danger">
+            <i class="bi bi-trash me-1"></i>Deactivate
+        </a>
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Back
+        </a>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-6">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-white py-3">
+                <h5 class="fw-bold mb-0"><i class="bi bi-info-circle text-primary me-2"></i>Customer Information</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4 text-muted">Customer Name</dt>
+                    <dd class="col-sm-8 fw-semibold">@c.CustomerName</dd>
+
+                    <dt class="col-sm-4 text-muted">Company</dt>
+                    <dd class="col-sm-8">@(c.CompanyName ?? "-")</dd>
+
+                    <dt class="col-sm-4 text-muted">Email</dt>
+                    <dd class="col-sm-8"><a href="mailto:@c.Email" class="text-decoration-none">@c.Email</a></dd>
+
+                    <dt class="col-sm-4 text-muted">Phone</dt>
+                    <dd class="col-sm-8">@c.Phone</dd>
+
+                    <dt class="col-sm-4 text-muted">Address</dt>
+                    <dd class="col-sm-8">@(c.Address ?? "-")</dd>
+
+                    <dt class="col-sm-4 text-muted">City / State</dt>
+                    <dd class="col-sm-8">@(c.City ?? "-") / @(c.State ?? "-")</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-white py-3">
+                <h5 class="fw-bold mb-0"><i class="bi bi-shield-person text-info me-2"></i>Ownership & Metadata</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4 text-muted">Assigned Owner</dt>
+                    <dd class="col-sm-8"><span class="badge bg-primary">@(c.AssignedTo ?? "-")</span></dd>
+
+                    <dt class="col-sm-4 text-muted">Created By</dt>
+                    <dd class="col-sm-8">@(c.CreatedBy ?? "-")</dd>
+
+                    <dt class="col-sm-4 text-muted">Created Date</dt>
+                    <dd class="col-sm-8">@c.CreatedDate.ToString("yyyy-MM-dd HH:mm:ss")</dd>
+
+                    <dt class="col-sm-4 text-muted">Normalized Email</dt>
+                    <dd class="col-sm-8"><code>@c.NormalizedEmail</code></dd>
+
+                    <dt class="col-sm-4 text-muted">Normalized Phone</dt>
+                    <dd class="col-sm-8"><code>@c.NormalizedPhone</code></dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-header bg-white py-3">
+        <h5 class="fw-bold mb-0"><i class="bi bi-briefcase text-warning me-2"></i>Associated Opportunities (@c.Opportunities.Count)</h5>
+    </div>
+    <div class="card-body p-0">
+        @if (!c.Opportunities.Any())
+        {
+            <div class="p-4 text-center text-muted">No opportunities registered for this customer yet.</div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light small">
+                        <tr>
+                            <th>Opportunity</th>
+                            <th>Amount</th>
+                            <th>Stage</th>
+                            <th>Probability</th>
+                            <th>Expected Close Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var opp in c.Opportunities)
+                        {
+                            <tr>
+                                <td>@opp.OpportunityName</td>
+                                <td>@opp.Amount.ToString("C")</td>
+                                <td><span class="badge bg-info">@opp.Stage</span></td>
+                                <td>@opp.Probability%</td>
+                                <td>@opp.ExpectedCloseDate.ToString("yyyy-MM-dd")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>

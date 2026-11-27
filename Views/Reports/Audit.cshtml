@@ -1,0 +1,48 @@
+@model AcxiomCRM.ViewModels.AuditReportViewModel
+@{
+    ViewData["Title"] = "Audit Report";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h2 class="h3 mb-0">Audit Events Report</h2>
+        <span class="text-muted">Security and business operations audit history (Section 11)</span>
+    </div>
+    <a asp-action="Index" class="btn btn-outline-secondary">&larr; Back to Reports</a>
+</div>
+
+<div class="card shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 small">
+            <thead class="table-light">
+                <tr>
+                    <th>Timestamp (UTC)</th>
+                    <th>User</th>
+                    <th>Action</th>
+                    <th>Module / Entity</th>
+                    <th>Record ID</th>
+                    <th>Event Details</th>
+                    <th>IP Address</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var a in Model.Logs)
+                {
+                    <tr>
+                        <td class="text-nowrap fw-bold">@a.CreatedDate.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                        <td><small class="text-muted">@(a.UserId ?? "System")</small></td>
+                        <td>
+                            <span class="badge bg-secondary">@a.Action</span>
+                        </td>
+                        <td><span class="badge bg-light text-dark border">@a.EntityName</span></td>
+                        <td>@a.RecordId</td>
+                        <td>
+                            @(a.NewValue ?? a.OldValue ?? "—")
+                        </td>
+                        <td><code>@(a.IpAddress ?? "127.0.0.1")</code></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

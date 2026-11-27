@@ -1,0 +1,98 @@
+@model AcxiomCRM.ViewModels.SalesConversionReportViewModel
+@{
+    ViewData["Title"] = "Sales & Conversion Report";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h2 class="h3 mb-0">Sales & Conversion Report</h2>
+        <span class="text-muted">Lead conversion effectiveness and opportunity outcome win rates (Section 11)</span>
+    </div>
+    <a asp-action="Index" class="btn btn-outline-secondary">&larr; Back to Reports</a>
+</div>
+
+<!-- Conversion Metrics Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 border-start border-info border-4">
+            <div class="card-body">
+                <div class="text-muted small fw-semibold">Total Leads</div>
+                <div class="h3 text-info mb-0 mt-1">@Model.TotalLeads</div>
+                <small class="text-muted">Converted: @Model.ConvertedLeads</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 border-start border-primary border-4">
+            <div class="card-body">
+                <div class="text-muted small fw-semibold">Lead Conversion Rate</div>
+                <div class="h3 text-primary mb-0 mt-1">@Model.LeadConversionRate.ToString("F1")%</div>
+                <small class="text-muted">Converted / Total Leads</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 border-start border-success border-4">
+            <div class="card-body">
+                <div class="text-muted small fw-semibold">Closed Won Deals</div>
+                <div class="h3 text-success mb-0 mt-1">@Model.WonOpportunities</div>
+                <small class="text-success fw-semibold">@Model.WonAmount.ToString("C")</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 border-start border-danger border-4">
+            <div class="card-body">
+                <div class="text-muted small fw-semibold">Closed Lost Deals</div>
+                <div class="h3 text-danger mb-0 mt-1">@Model.LostOpportunities</div>
+                <small class="text-danger fw-semibold">@Model.LostAmount.ToString("C")</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-6">
+        <div class="card shadow-sm border-0 p-4">
+            <h5 class="fw-bold mb-3"><i class="bi bi-funnel-fill text-info me-2"></i>Lead Conversion Funnel</h5>
+            <div class="mb-3">
+                <div class="d-flex justify-content-between mb-1">
+                    <span>Total Prospective Leads:</span>
+                    <strong>@Model.TotalLeads</strong>
+                </div>
+                <div class="progress" style="height: 10px;">
+                    <div class="progress-bar bg-info" style="width: 100%;"></div>
+                </div>
+            </div>
+            <div class="mb-3">
+                <div class="d-flex justify-content-between mb-1">
+                    <span>Converted to Paying Customers:</span>
+                    <strong>@Model.ConvertedLeads (@Model.LeadConversionRate.ToString("F1")%)</strong>
+                </div>
+                <div class="progress" style="height: 10px;">
+                    <div class="progress-bar bg-success" style="width: @Model.LeadConversionRate%;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card shadow-sm border-0 p-4">
+            <h5 class="fw-bold mb-3"><i class="bi bi-trophy-fill text-warning me-2"></i>Deal Win Rate</h5>
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <div>
+                    <div class="h1 text-success mb-0">@Model.OpportunityWinRate.ToString("F1")%</div>
+                    <span class="text-muted small">Win Rate on Closed Opportunities</span>
+                </div>
+                <div class="text-end">
+                    <div>Won: <strong class="text-success">@Model.WonOpportunities</strong></div>
+                    <div>Lost: <strong class="text-danger">@Model.LostOpportunities</strong></div>
+                </div>
+            </div>
+            <div class="progress" style="height: 12px;">
+                <div class="progress-bar bg-success" style="width: @Model.OpportunityWinRate%;"></div>
+                <div class="progress-bar bg-danger" style="width: @(100 - Model.OpportunityWinRate);"></div>
+            </div>
+        </div>
+    </div>
+</div>

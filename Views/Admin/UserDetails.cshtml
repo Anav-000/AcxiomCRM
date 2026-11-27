@@ -1,0 +1,102 @@
+@model AcxiomCRM.ViewModels.AdminUserItemViewModel
+@{
+    ViewData["Title"] = "User Details";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                @TempData["SuccessMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                @TempData["ErrorMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                <h4 class="card-title mb-0">@Model.Name</h4>
+                <div>
+                    <span class="badge bg-secondary fs-6 me-1">@Model.Role</span>
+                    @if (Model.IsActive)
+                    {
+                        <span class="badge bg-success fs-6">Active</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-danger fs-6">Inactive</span>
+                    }
+                </div>
+            </div>
+            <div class="card-body p-4">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4 text-muted">User ID</dt>
+                    <dd class="col-sm-8 font-monospace small">@Model.Id</dd>
+
+                    <dt class="col-sm-4 text-muted">Email</dt>
+                    <dd class="col-sm-8">@Model.Email</dd>
+
+                    <dt class="col-sm-4 text-muted">Primary Role</dt>
+                    <dd class="col-sm-8 fw-semibold">@Model.Role</dd>
+
+                    <dt class="col-sm-4 text-muted">Assigned Manager</dt>
+                    <dd class="col-sm-8">@(Model.ManagerName ?? "None")</dd>
+
+                    <dt class="col-sm-4 text-muted">Lockout Status</dt>
+                    <dd class="col-sm-8">
+                        @if (Model.IsLockedOut)
+                        {
+                            <span class="badge bg-danger">Locked until @Model.LockoutEnd?.ToString("g")</span>
+                        }
+                        else
+                        {
+                            <span class="text-success"><i class="bi bi-shield-check me-1"></i>Unlocked (Failed attempts: @Model.AccessFailedCount)</span>
+                        }
+                    </dd>
+
+                    <dt class="col-sm-4 text-muted">Registration Date</dt>
+                    <dd class="col-sm-8">@Model.CreatedDate.ToString("f")</dd>
+                </dl>
+            </div>
+            <div class="card-footer bg-white py-3 d-flex justify-content-between align-items-center">
+                <a asp-action="Users" class="btn btn-outline-secondary">Back to Users</a>
+                <div class="d-flex gap-2">
+                    @if (Model.IsLockedOut)
+                    {
+                        <form asp-action="Unlock" asp-route-id="@Model.Id" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-warning"><i class="bi bi-unlock me-1"></i>Unlock Account</button>
+                        </form>
+                    }
+                    <a asp-action="UserEdit" asp-route-id="@Model.Id" class="btn btn-primary">Edit User</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Administrative Password Reset Panel -->
+        <div class="card border-warning shadow-sm">
+            <div class="card-header bg-warning-subtle py-3">
+                <h5 class="card-title mb-0 text-dark"><i class="bi bi-key-fill me-2"></i>Reset User Password</h5>
+            </div>
+            <div class="card-body p-4">
+                <p class="text-muted small">As an administrator, you can directly set a compliant password for this user without exposing old secrets.</p>
+                <form asp-action="ResetPassword" asp-route-id="@Model.Id" method="post" class="row g-3">
+                    @Html.AntiForgeryToken()
+                    <div class="col-md-8">
+                        <input type="password" name="newPassword" class="form-control" placeholder="New Password (min 8 chars, mixed case, digit, special)" required minlength="8" />
+                    </div>
+                    <div class="col-md-4">
+                        <button type="submit" class="btn btn-warning w-100">Reset Password</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

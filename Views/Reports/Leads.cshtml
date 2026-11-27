@@ -1,0 +1,92 @@
+@model AcxiomCRM.ViewModels.LeadReportViewModel
+@{
+    ViewData["Title"] = "Lead Report";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h2 class="h3 mb-0">Lead Report</h2>
+        <span class="text-muted">Lead source, status, expected value, and conversion data (Section 11)</span>
+    </div>
+    <a asp-action="Index" class="btn btn-outline-secondary">&larr; Back to Reports</a>
+</div>
+
+<!-- Metrics Summary -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0 border-start border-info border-4">
+            <div class="card-body">
+                <div class="text-muted small fw-semibold">Total Leads</div>
+                <div class="h3 text-info mb-0 mt-1">@Model.TotalLeads</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0 border-start border-success border-4">
+            <div class="card-body">
+                <div class="text-muted small fw-semibold">Converted Leads</div>
+                <div class="h3 text-success mb-0 mt-1">@Model.ConvertedCount</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0 border-start border-primary border-4">
+            <div class="card-body">
+                <div class="text-muted small fw-semibold">Total Expected Value</div>
+                <div class="h3 text-primary mb-0 mt-1">@Model.TotalExpectedValue.ToString("C")</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Lead Code</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Source</th>
+                    <th>Status</th>
+                    <th class="text-end">Expected Value</th>
+                    <th>Owner</th>
+                    <th>Created Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var l in Model.Leads)
+                {
+                    <tr>
+                        <td><code>@l.LeadCode</code></td>
+                        <td class="fw-semibold">@l.LeadName</td>
+                        <td>@l.Email</td>
+                        <td>@l.Phone</td>
+                        <td>@(l.Source ?? "Direct")</td>
+                        <td>
+                            @switch (l.Status)
+                            {
+                                case "Converted":
+                                    <span class="badge bg-success">Converted</span>
+                                    break;
+                                case "Qualified":
+                                    <span class="badge bg-primary">Qualified</span>
+                                    break;
+                                case "Lost":
+                                    <span class="badge bg-danger">Lost</span>
+                                    break;
+                                default:
+                                    <span class="badge bg-secondary">@l.Status</span>
+                                    break;
+                            }
+                        </td>
+                        <td class="text-end fw-semibold">@l.ExpectedValue.ToString("C")</td>
+                        <td><small>@(l.AssignedTo ?? "Unassigned")</small></td>
+                        <td>@l.CreatedDate.ToString("yyyy-MM-dd")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

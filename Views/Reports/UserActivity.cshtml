@@ -1,0 +1,61 @@
+@model AcxiomCRM.ViewModels.UserActivityReportViewModel
+@{
+    ViewData["Title"] = "User Activity Report";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h2 class="h3 mb-0">User Activity Report</h2>
+        <span class="text-muted">Calls, meetings, emails, tasks, and system actions by team member (Section 11)</span>
+    </div>
+    <a asp-action="Index" class="btn btn-outline-secondary">&larr; Back to Reports</a>
+</div>
+
+<div class="card shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>User</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th class="text-center">Calls</th>
+                    <th class="text-center">Meetings</th>
+                    <th class="text-center">Emails</th>
+                    <th class="text-center">Tasks</th>
+                    <th class="text-center fw-bold">Total Activities</th>
+                    <th class="text-center">Audit Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var u in Model.UserActivities)
+                {
+                    <tr>
+                        <td class="fw-semibold">@u.UserName</td>
+                        <td>@u.Email</td>
+                        <td>
+                            @switch (u.Role)
+                            {
+                                case "Admin":
+                                    <span class="badge bg-danger">Admin</span>
+                                    break;
+                                case "Manager":
+                                    <span class="badge bg-warning text-dark">Manager</span>
+                                    break;
+                                default:
+                                    <span class="badge bg-primary">SalesExecutive</span>
+                                    break;
+                            }
+                        </td>
+                        <td class="text-center">@u.CallCount</td>
+                        <td class="text-center">@u.MeetingCount</td>
+                        <td class="text-center">@u.EmailCount</td>
+                        <td class="text-center">@u.TaskCount</td>
+                        <td class="text-center fw-bold text-primary">@u.TotalActivities</td>
+                        <td class="text-center text-muted">@u.AuditLogCount</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

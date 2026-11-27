@@ -1,0 +1,29 @@
+## Build and compile outputs
+[Bb]in/
+[Oo]bj/
+
+## Visual Studio & VS Code cache
+.vs/
+.vscode/
+*.user
+*.suo
+
+## Sensitive Data & Data Protection keys
+.keys/
+.dotnet_home/
+*.env
+*.env.*
+*.pfx
+*.certificate
+
+## Local SQLite databases and logs
+*.db
+*.db-shm
+*.db-wal
+*.db-journal
+*.log
+
+## Submission and staging artifacts
+*.zip
+_fresh_test/
+_staging/

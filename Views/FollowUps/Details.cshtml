@@ -1,0 +1,71 @@
+@model AcxiomCRM.ViewModels.FollowUpDetailsViewModel
+@{
+    ViewData["Title"] = "Follow-Up Details";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-sm mb-4 @(Model.IsOverdue ? "border-danger" : "")">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                <h4 class="card-title mb-0">Follow-Up #@Model.FollowUp.FollowUpId</h4>
+                <div>
+                    <span class="badge bg-secondary fs-6 me-1">@Model.FollowUp.FollowUpType</span>
+                    @switch (Model.FollowUp.Status)
+                    {
+                        case "Planned":
+                            <span class="badge bg-warning text-dark fs-6">Planned</span>
+                            break;
+                        case "Completed":
+                            <span class="badge bg-success fs-6">Completed</span>
+                            break;
+                        case "Cancelled":
+                            <span class="badge bg-secondary fs-6">Cancelled</span>
+                            break;
+                        default:
+                            <span class="badge bg-light text-dark fs-6">@Model.FollowUp.Status</span>
+                            break;
+                    }
+                    @if (Model.IsOverdue)
+                    {
+                        <span class="badge bg-danger fs-6 ms-1">OVERDUE</span>
+                    }
+                </div>
+            </div>
+            <div class="card-body p-4">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4 text-muted">Scheduled Date</dt>
+                    <dd class="col-sm-8 fw-bold">@Model.FollowUp.FollowUpDate.ToString("yyyy-MM-dd")</dd>
+
+                    <dt class="col-sm-4 text-muted">Customer</dt>
+                    <dd class="col-sm-8">@(Model.CustomerName ?? "None")</dd>
+
+                    <dt class="col-sm-4 text-muted">Lead</dt>
+                    <dd class="col-sm-8">@(Model.LeadName ?? "None")</dd>
+
+                    <dt class="col-sm-4 text-muted">Opportunity</dt>
+                    <dd class="col-sm-8">@(Model.OpportunityName ?? "None")</dd>
+
+                    <dt class="col-sm-4 text-muted">Assigned Owner</dt>
+                    <dd class="col-sm-8">@(Model.AssignedToName ?? "Unassigned")</dd>
+
+                    <dt class="col-sm-4 text-muted">Remarks</dt>
+                    <dd class="col-sm-8">@(string.IsNullOrWhiteSpace(Model.FollowUp.Remarks) ? "—" : Model.FollowUp.Remarks)</dd>
+                </dl>
+            </div>
+            <div class="card-footer bg-white py-3 d-flex justify-content-between">
+                <a asp-action="Index" class="btn btn-outline-secondary">Back to List</a>
+                <div class="d-flex gap-2">
+                    @if (Model.FollowUp.Status == "Planned")
+                    {
+                        <form asp-action="Complete" asp-route-id="@Model.FollowUp.FollowUpId" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-success">Mark Completed</button>
+                        </form>
+                    }
+                    <a asp-action="Edit" asp-route-id="@Model.FollowUp.FollowUpId" class="btn btn-primary">Edit</a>
+                    <a asp-action="Delete" asp-route-id="@Model.FollowUp.FollowUpId" class="btn btn-outline-danger">Delete</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
