@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: acxiomcrm
+    runtime: docker
+    plan: free
+    region: oregon
+    branch: main
+    healthCheckPath: /
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: SEED_DEMO_DATA
+        value: "true"
+      - key: ADMIN_EMAIL
+        value: admin@acxiomcrm.local
+      - key: ADMIN_PASSWORD
+        generateValue: true
+      - key: MANAGER_EMAIL
+        value: manager@acxiomcrm.local
+      - key: MANAGER_PASSWORD
+        generateValue: true
+      - key: SALES_EMAIL
+        value: sales@acxiomcrm.local
+      - key: SALES_PASSWORD
+        generateValue: true
+      - key: SALES2_EMAIL
+        value: sales2@acxiomcrm.local
+      - key: SALES2_PASSWORD
+        generateValue: true

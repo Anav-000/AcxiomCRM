@@ -2,11 +2,19 @@ using AcxiomCRM.Data;
 using AcxiomCRM.Models;
 using AcxiomCRM.Services;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Port binding fallback for containerized environments (Render, Cloud Run, etc.)
+var portEnv = Environment.GetEnvironmentVariable("PORT");
+if (!string.IsNullOrEmpty(portEnv) && string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ASPNETCORE_URLS")))
+{
+    builder.WebHost.UseUrls($"http://0.0.0.0:{portEnv}");
+}
 
 // 1. Configure EF Core with SQLite
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
@@ -15,11 +23,24 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlite(connectionString));
 
-// 2. Configure Data Protection to persist inside workspace
+// 2. Configure Data Protection to persist inside workspace / container
 var keysFolder = Path.Combine(builder.Environment.ContentRootPath, ".keys");
+if (!Directory.Exists(keysFolder))
+{
+    Directory.CreateDirectory(keysFolder);
+}
+
 builder.Services.AddDataProtection()
     .PersistKeysToFileSystem(new DirectoryInfo(keysFolder))
     .SetApplicationName("AcxiomCRM");
+
+// Configure Forwarded Headers for reverse proxy (Render, AWS, etc.)
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
 
 // 3. Configure ASP.NET Core Identity with mandatory password policy & lockout
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
@@ -43,7 +64,7 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
 
-// 4. Configure Cookie Settings
+// 4. Configure Cookie Settings with reverse proxy compatibility
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.Cookie.HttpOnly = true;
@@ -51,6 +72,8 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.LoginPath = "/Account/Login";
     options.AccessDeniedPath = "/Account/AccessDenied";
     options.SlidingExpiration = true;
+    options.Cookie.SameSite = SameSiteMode.Lax;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
 });
 
 // 5. Register Services & Anti-forgery filter
@@ -60,6 +83,7 @@ builder.Services.AddScoped<IScopedAccessService, ScopedAccessService>();
 builder.Services.AddAntiforgery(options =>
 {
     options.HeaderName = "X-XSRF-TOKEN";
+    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
 });
 
 builder.Services.AddControllersWithViews(options =>
@@ -68,6 +92,9 @@ builder.Services.AddControllersWithViews(options =>
 });
 
 var app = builder.Build();
+
+// Enable Forwarded Headers first before any redirect or auth middleware
+app.UseForwardedHeaders();
 
 // 6. Initialize Database, migrations & seed roles/accounts
 using (var scope = app.Services.CreateScope())
