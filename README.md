@@ -1,8 +1,26 @@
+<div align="center">
+
 # AcxiomCRM
 
-AcxiomCRM is a role-based CRM for managing customers, qualifying leads, tracking sales opportunities, and coordinating follow-ups. It combines a Razor web interface, a scoped REST API, and audit records for sales and account administration.
+**Customer relationship and sales pipeline management**
 
-**Live demo:** [AcxiomCRM on Render](https://acxiomcrm-65sa.onrender.com) · [Sign in](https://acxiomcrm-65sa.onrender.com/Account/Login)
+[![Live demo](https://img.shields.io/badge/Live_Demo-Open_AcxiomCRM-087f5b?style=for-the-badge&logo=render&logoColor=white)](https://acxiomcrm-65sa.onrender.com/)
+[![Source code](https://img.shields.io/badge/GitHub-Source_Code-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Anav-000/AcxiomCRM)
+
+[![ASP.NET Core](https://img.shields.io/badge/ASP.NET_Core-8-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/apps/aspnet)
+[![EF Core](https://img.shields.io/badge/EF_Core-8-512BD4?logo=dotnet&logoColor=white)](https://learn.microsoft.com/ef/core/)
+[![SQLite](https://img.shields.io/badge/SQLite-Database-003B57?logo=sqlite&logoColor=white)](https://www.sqlite.org/)
+[![Chart.js](https://img.shields.io/badge/Chart.js-Dashboards-FF6384?logo=chartdotjs&logoColor=white)](https://www.chartjs.org/)
+
+[Live sign-in](https://acxiomcrm-65sa.onrender.com/Account/Login) · [Features](#features) · [Local setup](#local-setup) · [Architecture](#architecture-and-database) · [REST API](#rest-api) · [Verification](#verification)
+
+Developed by [Arnav Kumar](https://github.com/Anav-000)
+
+</div>
+
+## Overview
+
+AcxiomCRM helps sales teams manage customers, qualify leads, track opportunities, and coordinate follow-ups. The Razor interface and REST API apply role and record-level access controls. Managers can review team pipeline and reports, and administrators can manage accounts and inspect audit history.
 
 The hosted demo uses synthetic data and requires a hosted account for protected screens. Follow the local setup below to reproduce all three roles. The Render Free service can take time to wake up, and its local SQLite data can reset after a restart or redeploy.
 
@@ -94,6 +112,19 @@ The UI validates required fields, format, length, and ranges. The server also va
 ## Architecture and database
 
 **Stack** · ASP.NET Core 8 MVC and Razor, ASP.NET Core Identity, EF Core, SQLite, Bootstrap 5, jQuery unobtrusive validation, Chart.js, and Docker.
+
+```mermaid
+flowchart TB
+    UI["Browser and Razor views"] --> MVC["MVC controllers"]
+    Client["API client"] --> API["REST controllers"]
+    MVC --> Scope["Role and record scope"]
+    API --> Scope
+    Scope --> EF["EF Core context"]
+    MVC --> Audit["Audit service"]
+    API --> Audit
+    Audit --> EF
+    EF --> SQLite[("SQLite")]
+```
 
 | Location | Responsibility |
 | --- | --- |
